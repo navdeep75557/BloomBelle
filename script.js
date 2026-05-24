@@ -1,13 +1,20 @@
 // BloomBelle India - Premium Interactive Web Application Logic
-// Performance-optimized, clean vanilla JavaScript with state persistence
+// Performance-optimized, clean vanilla JavaScript with state persistence & Shopping Bag Drawer
 
 (function() {
     'use strict';
 
+    // E-Commerce Product Catalog
+    const productsCatalog = {
+        "Crimson Romance": { price: 2499, image: "assets/crimson-romance.png" },
+        "Spring Bliss": { price: 1899, image: "assets/spring-bliss.png" },
+        "Sunny Radiance": { price: 1499, image: "assets/sunny-radiance.png" },
+        "Lavender Dreams": { price: 2199, image: "assets/lavender-dreams.png" }
+    };
+
     // State Variables
-    let cartCount = 2; // Initial state matching HTML
-    let wishlistCount = 0;
-    const wishlistItems = new Set();
+    let cartItems = {}; // Format: { "Product Name": quantity }
+    let wishlistItems = new Set();
 
     // Initialize on DOM ready
     if (document.readyState === 'loading') {
@@ -21,6 +28,7 @@
         initializeEventListeners();
         initializeScrollSpy();
         injectAnimationStyles();
+        renderCart();
         trackEvent('page_view', { title: document.title });
     }
 
@@ -44,11 +52,17 @@
                 }
             }
 
-            // Cart Badge from localStorage
-            const savedCart = localStorage.getItem('bloombelle-cart-count');
+            // Cart Items from localStorage (Pre-populate with 2 items for gorgeous demo if empty)
+            const savedCart = localStorage.getItem('bloombelle-cart-items');
             if (savedCart !== null) {
-                cartCount = parseInt(savedCart, 10) || 0;
-                updateBadge('cartCount', cartCount);
+                cartItems = JSON.parse(savedCart) || {};
+            } else {
+                // Pre-populate so the header badge displays "2" as matching the initial HTML
+                cartItems = {
+                    "Crimson Romance": 1,
+                    "Sunny Radiance": 1
+                };
+                localStorage.setItem('bloombelle-cart-items', JSON.stringify(cartItems));
             }
 
             // Wishlist Badge from localStorage
@@ -57,8 +71,7 @@
                 const parsed = JSON.parse(savedWishlist);
                 if (Array.isArray(parsed)) {
                     parsed.forEach(item => wishlistItems.add(item));
-                    wishlistCount = wishlistItems.size;
-                    updateBadge('wishlistCount', wishlistCount);
+                    updateBadge('wishlistCount', wishlistItems.size);
                     
                     // Update heart icons on cards
                     document.querySelectorAll('.product-card').forEach(card => {
@@ -103,6 +116,35 @@
             });
         });
 
+        // Shopping Cart Drawer controls
+        const cartBtn = document.getElementById('cartBtn');
+        const cartDrawer = document.getElementById('cartDrawer');
+        const cartDrawerClose = document.getElementById('cartDrawerClose');
+        const cartDrawerOverlay = document.getElementById('cartDrawerOverlay');
+        const closeCartBtn = document.getElementById('closeCartBtn');
+
+        if (cartBtn) {
+            cartBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleCartDrawer(true);
+            });
+        }
+        if (cartDrawerClose) {
+            cartDrawerClose.addEventListener('click', () => toggleCartDrawer(false));
+        }
+        if (cartDrawerOverlay) {
+            cartDrawerOverlay.addEventListener('click', () => toggleCartDrawer(false));
+        }
+        if (closeCartBtn) {
+            closeCartBtn.addEventListener('click', () => toggleCartDrawer(false));
+        }
+
+        // Checkout Button Click
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        if (checkoutBtn) {
+            checkoutBtn.addEventListener('click', handleCheckout);
+        }
+
         // Dark Theme Switcher
         const themeToggleBtn = document.getElementById('darkModeToggle');
         if (themeToggleBtn) {
@@ -141,7 +183,7 @@
         });
     }
 
-    // Toggle slide drawer
+    // Toggle slide mobile drawer
     function toggleDrawer(open) {
         const mobileDrawer = document.getElementById('mobileDrawer');
         const mobileToggle = document.getElementById('mobileToggle');
@@ -161,6 +203,23 @@
             if (mobileToggle) {
                 mobileToggle.setAttribute('aria-expanded', 'false');
             }
+            document.body.style.overflow = ''; // Unlock scroll
+        }
+    }
+
+    // Toggle Shopping Cart Drawer
+    function toggleCartDrawer(open) {
+        const cartDrawer = document.getElementById('cartDrawer');
+        if (!cartDrawer) return;
+
+        if (open) {
+            cartDrawer.classList.add('open');
+            cartDrawer.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden'; // Lock background scroll
+            renderCart();
+        } else {
+            cartDrawer.classList.remove('open');
+            cartDrawer.setAttribute('aria-hidden', 'true');
             document.body.style.overflow = ''; // Unlock scroll
         }
     }
@@ -196,10 +255,16 @@
         const productName = card?.getAttribute('data-product') || 'Signature Bouquet';
         
         try {
-            // Update local state
-            cartCount += 1;
-            updateBadge('cartCount', cartCount);
-            localStorage.setItem('bloombelle-cart-count', cartCount);
+            // Update local state items
+            if (cartItems[productName]) {
+                cartItems[productName] += 1;
+            } else {
+                cartItems[productName] = 1;
+            }
+
+            // Save and render
+            localStorage.setItem('bloombelle-cart-items', JSON.stringify(cartItems));
+            renderCart();
 
             // Animate button
             button.disabled = true;
@@ -221,17 +286,172 @@
             // Track analytics
             trackEvent('add_to_cart', { product_name: productName, price_currency: 'INR' });
 
-            // Reset button
+            // Open cart drawer after a tiny delay so the user sees it in their bag!
             setTimeout(() => {
                 button.innerHTML = originalContent;
                 button.disabled = false;
                 button.style.background = '';
-            }, 2000);
+                toggleCartDrawer(true);
+            }, 600);
 
         } catch (error) {
             console.error('Error handling add to cart:', error);
             button.innerHTML = originalContent;
             button.disabled = false;
+        }
+    }
+
+    // Dynamic Cart Rendering
+    function renderCart() {
+        const container = document.getElementById('cartItemsContainer');
+        const footer = document.getElementById('cartDrawerFooter');
+        const cartCountHeader = document.getElementById('cartCountHeader');
+        
+        if (!container) return;
+
+        let totalItems = 0;
+        let subtotal = 0;
+
+        // Clear container first
+        container.innerHTML = '';
+
+        // Calculate counts
+        Object.keys(cartItems).forEach(name => {
+            const qty = cartItems[name];
+            if (qty > 0) {
+                totalItems += qty;
+                const prod = productsCatalog[name];
+                if (prod) {
+                    subtotal += prod.price * qty;
+                }
+            } else {
+                delete cartItems[name];
+            }
+        });
+
+        // Save cleaned cartItems back to localStorage
+        localStorage.setItem('bloombelle-cart-items', JSON.stringify(cartItems));
+
+        // Update Badges
+        updateBadge('cartCount', totalItems);
+        if (cartCountHeader) {
+            cartCountHeader.textContent = totalItems;
+        }
+
+        // Render contents
+        const activeNames = Object.keys(cartItems);
+
+        if (activeNames.length === 0) {
+            // Render empty message
+            container.innerHTML = `
+                <div class="empty-cart-message">
+                    <span class="empty-cart-icon">🛍️</span>
+                    <p>Your shopping bag is empty</p>
+                    <button class="btn btn-primary btn-sm close-cart-btn" id="closeCartBtn">Shop Our Bouquets</button>
+                </div>
+            `;
+            if (footer) footer.style.display = 'none';
+
+            // Re-bind close cart button inside dynamic message
+            const closeBtn = document.getElementById('closeCartBtn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => toggleCartDrawer(false));
+            }
+        } else {
+            // Render cart items
+            activeNames.forEach(name => {
+                const qty = cartItems[name];
+                const prod = productsCatalog[name] || { price: 1999, image: 'assets/hero-bouquet.png' };
+                
+                const itemEl = document.createElement('div');
+                itemEl.className = 'cart-item';
+                itemEl.innerHTML = `
+                    <img src="${prod.image}" alt="${name}" class="cart-item-img">
+                    <div class="cart-item-details">
+                        <h4 class="cart-item-name">${name}</h4>
+                        <div class="cart-item-price">₹${(prod.price * qty).toLocaleString('en-IN')}</div>
+                        <div class="cart-item-actions">
+                            <div class="qty-control">
+                                <button class="qty-btn dec-qty" data-name="${name}"><i class="fas fa-minus"></i></button>
+                                <span class="qty-val">${qty}</span>
+                                <button class="qty-btn inc-qty" data-name="${name}"><i class="fas fa-plus"></i></button>
+                            </div>
+                            <button class="cart-item-remove" data-name="${name}"><i class="fas fa-trash-alt"></i> Remove</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(itemEl);
+            });
+
+            // Update subtotal/total
+            const subtotalEl = document.getElementById('cartSubtotal');
+            const totalEl = document.getElementById('cartTotal');
+            
+            if (subtotalEl) subtotalEl.textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+            if (totalEl) totalEl.textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+            
+            if (footer) footer.style.display = 'flex';
+
+            // Bind Qty and Remove Action Listeners
+            container.querySelectorAll('.inc-qty').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const name = e.currentTarget.getAttribute('data-name');
+                    cartItems[name] += 1;
+                    renderCart();
+                });
+            });
+
+            container.querySelectorAll('.dec-qty').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const name = e.currentTarget.getAttribute('data-name');
+                    if (cartItems[name] > 1) {
+                        cartItems[name] -= 1;
+                    } else {
+                        delete cartItems[name];
+                    }
+                    renderCart();
+                });
+            });
+
+            container.querySelectorAll('.cart-item-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const name = e.currentTarget.getAttribute('data-name');
+                    delete cartItems[name];
+                    renderCart();
+                    showMessage(`"${name}" removed from shopping bag.`, 'info');
+                });
+            });
+        }
+    }
+
+    // Checkout simulated order
+    function handleCheckout() {
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        if (!checkoutBtn) return;
+
+        try {
+            checkoutBtn.disabled = true;
+            checkoutBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing Secure Checkout...';
+
+            setTimeout(() => {
+                // Clear cart completely
+                cartItems = {};
+                localStorage.setItem('bloombelle-cart-items', JSON.stringify(cartItems));
+                renderCart();
+
+                showMessage('Order simulated successfully! Thank you for shopping with BloomBelle India. 🌸', 'success');
+                trackEvent('checkout_complete', { simulated: true });
+                
+                setTimeout(() => {
+                    toggleCartDrawer(false);
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.innerHTML = '<i class="fas fa-credit-card"></i> Proceed to Checkout';
+                }, 1000);
+            }, 1500);
+        } catch (e) {
+            console.error('Checkout error:', e);
+            checkoutBtn.disabled = false;
+            checkoutBtn.innerHTML = '<i class="fas fa-credit-card"></i> Proceed to Checkout';
         }
     }
 
@@ -263,8 +483,7 @@
             }
 
             // Update state
-            wishlistCount = wishlistItems.size;
-            updateBadge('wishlistCount', wishlistCount);
+            updateBadge('wishlistCount', wishlistItems.size);
             localStorage.setItem('bloombelle-wishlist', JSON.stringify(Array.from(wishlistItems)));
             
             // Pulse the header wishlist button
@@ -504,7 +723,7 @@
     window.BloomBelle = {
         trackEvent,
         showMessage,
-        version: '1.2.0'
+        version: '1.3.0'
     };
 
 })();

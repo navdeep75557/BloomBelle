@@ -18,23 +18,23 @@
     
     <!-- Open Graph / Facebook Meta Tags -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://bloombelle.vercel.app/">
+    <meta property="og:url" content="https://bloom-belle.vercel.app/">
     <meta property="og:title" content="BloomBelle India - Fresh Luxury Flowers Delivered Same-Day">
     <meta property="og:description" content="Premium handcrafted florist bouquets delivered fresh. Same-day luxury delivery across India's metro cities. Eco-friendly wrapping.">
-    <meta property="og:image" content="https://bloombelle.vercel.app/assets/hero-bouquet.png">
+    <meta property="og:image" content="https://bloom-belle.vercel.app/assets/hero-bouquet.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="BloomBelle India">
     
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://bloombelle.vercel.app/">
+    <meta name="twitter:url" content="https://bloom-belle.vercel.app/">
     <meta name="twitter:title" content="BloomBelle India - Fresh Luxury Flowers Delivered Same-Day">
     <meta name="twitter:description" content="Handcrafted premium flower bouquets. Same-day delivery across metro cities in India.">
-    <meta name="twitter:image" content="https://bloombelle.vercel.app/assets/hero-bouquet.png">
+    <meta name="twitter:image" content="https://bloom-belle.vercel.app/assets/hero-bouquet.png">
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://bloombelle.vercel.app/">
+    <link rel="canonical" href="https://bloom-belle.vercel.app/">
     
     <!-- Favicon & App Icons -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='85' font-size='90'>🌸</text></svg>">
@@ -60,9 +60,9 @@
         "@context": "https://schema.org",
         "@type": "LocalBusiness",
         "name": "BloomBelle India",
-        "image": "https://bloombelle.vercel.app/assets/hero-bouquet.png",
+        "image": "https://bloom-belle.vercel.app/assets/hero-bouquet.png",
         "description": "Premium handcrafted fresh flower bouquets delivered same-day in major Indian cities.",
-        "url": "https://bloombelle.vercel.app",
+        "url": "https://bloom-belle.vercel.app",
         "telephone": "+91-9876543210",
         "email": "hello@bloombelle.in",
         "areaServed": {
@@ -152,6 +152,44 @@
             <div class="drawer-footer">
                 <p>Premium Florist, Delivered Fresh</p>
                 <p class="drawer-phone"><i class="fas fa-phone"></i> +91 98765 43210</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shopping Cart Side Drawer -->
+    <div class="cart-drawer" id="cartDrawer" aria-hidden="true">
+        <div class="drawer-overlay" id="cartDrawerOverlay"></div>
+        <div class="cart-drawer-content">
+            <div class="cart-drawer-header">
+                <h3>Shopping Bag (<span id="cartCountHeader">0</span>)</h3>
+                <button class="drawer-close" id="cartDrawerClose" aria-label="Close cart">&times;</button>
+            </div>
+            
+            <div class="cart-items-container" id="cartItemsContainer">
+                <!-- Cart items dynamically injected via JavaScript -->
+                <div class="empty-cart-message">
+                    <span class="empty-cart-icon">🛍️</span>
+                    <p>Your shopping bag is empty</p>
+                    <button class="btn btn-primary btn-sm close-cart-btn" id="closeCartBtn">Shop Our Bouquets</button>
+                </div>
+            </div>
+            
+            <div class="cart-drawer-footer" id="cartDrawerFooter" style="display: none;">
+                <div class="cart-summary-row">
+                    <span>Subtotal</span>
+                    <span id="cartSubtotal">₹0</span>
+                </div>
+                <div class="cart-summary-row">
+                    <span>Delivery (India)</span>
+                    <span class="text-free">FREE</span>
+                </div>
+                <div class="cart-summary-row total-row">
+                    <span>Total Amount</span>
+                    <span id="cartTotal">₹0</span>
+                </div>
+                <button class="btn btn-primary checkout-btn" id="checkoutBtn">
+                    <i class="fas fa-credit-card"></i> Proceed to Checkout
+                </button>
             </div>
         </div>
     </div>
