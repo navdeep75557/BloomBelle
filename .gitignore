@@ -1,0 +1,34 @@
+# Production Build Files
+dist/
+build/
+node_modules/
+
+# Environment Variables
+.env
+.env.local
+.env.production
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+.gitkeep
+
+# Testing
+coverage/
+.nyc_output
+
+# Dependencies
+package-lock.json
+yarn.lock
+
+# Deployment
+.vercel
+vercel-build.log

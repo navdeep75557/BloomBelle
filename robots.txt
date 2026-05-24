@@ -1,0 +1,12 @@
+# robots.txt for BloomBelle
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://bloombelle.vercel.app/sitemap.xml
+
+# Rate limiting
+Request-rate: 30/60
+Crawl-delay: 1
